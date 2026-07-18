@@ -1,0 +1,38 @@
+services:
+  compute:
+    build: ./compute-rust
+    environment:
+      FEASTREAM_COMPUTE_ADDR: 0.0.0.0:8091
+    ports:
+      - "8091:8091"
+
+  inference:
+    build: ./inference-python
+    environment:
+      FEASTREAM_TRAIN_N: "1500"
+    ports:
+      - "8000:8000"
+
+  gateway:
+    build: ./gateway-go
+    environment:
+      FEASTREAM_ADDR: ":8080"
+      FEASTREAM_TCP_ADDR: ":9101"
+      FEASTREAM_COMPUTE_URL: http://compute:8091
+      FEASTREAM_INFER_URL: http://inference:8000
+      FEASTREAM_SYNTH: "1"
+    ports:
+      - "8080:8080"
+      - "9101:9101"
+    depends_on:
+      - compute
+      - inference
+
+  cockpit:
+    build: ./cockpit-ts
+    environment:
+      NEXT_PUBLIC_GATEWAY_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - gateway
